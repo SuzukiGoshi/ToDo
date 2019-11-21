@@ -1,8 +1,10 @@
 package com.todoapplication
 
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import android.os.Bundle
 import android.content.Context
+import android.graphics.Paint
 import android.view.View
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -146,14 +148,21 @@ class MainActivity : AppCompatActivity() {
             val listItem = getItem(position)
             var title = listItem!!.titleName
             viewHolder.checkbox.isChecked = listItem!!.cheked
+            viewHolder.titleEdit.text = title
+            var paint =viewHolder.titleEdit.paint
+            changeAlias(paint, listItem!!.cheked)
             // チェックボックス押下処理を追加
-            viewHolder.checkbox.setOnClickListener {
+            viewHolder.checkbox.setOnClickListener {view ->
                 var check = FLAG_NOCHECK
+                val cons = view.parent as ConstraintLayout
+                val edittext = cons.findViewById(R.id.editListText) as TextView
+                val clickCheck = view as CheckBox
                 // 現チェック状態をDBに登録する
-                if(viewHolder.checkbox.isChecked())
-                {
+                var flag = clickCheck.isChecked()
+                if (flag) {
                     check = FLAG_CHECK
                 }
+                changeAlias(edittext.paint, flag)
                 // データベースを更新
                 val db = helper!!.writableDatabase
                 try {
@@ -162,15 +171,19 @@ class MainActivity : AppCompatActivity() {
                 } finally {
                     db.close()
                 }
+                // リストデータを更新
+                todoList[position].cheked = flag
             }
-            viewHolder.titleEdit.text = title
             // 削除画像押下処理を追加
-            viewHolder.img.setOnClickListener { _ ->
+            viewHolder.img.setOnClickListener { view ->
                 // データベースから削除
                 val db = helper!!.writableDatabase
+                val cons = view.parent as ConstraintLayout
+                val edittext = cons.findViewById(R.id.editListText) as TextView
+                val deleteTitle = edittext.text
                 try {
-                    // 新規作成
-                    db.execSQL("delete from TODO_TABLE where title = '$title'")
+                    // 削除処理
+                    db.execSQL("delete from TODO_TABLE where title = '$deleteTitle'")
                 } finally {
                     db.close()
                 }
@@ -182,7 +195,18 @@ class MainActivity : AppCompatActivity() {
 
             return view!!
         }
+        // チェックボックスON時に打ち消し線を表示
+        fun changeAlias(paint : Paint , flag : Boolean){
+            if(flag){
+                paint.flags = paint.flags or Paint.STRIKE_THRU_TEXT_FLAG
+                paint.isAntiAlias =  true
+            }
+            else{
+                paint.flags = 0
+            }
+        }
     }
+
     // 定数定義
     companion object{
         const val FLAG_CHECK = "1"
