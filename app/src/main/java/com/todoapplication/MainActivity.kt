@@ -173,6 +173,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 // リストデータを更新
                 todoList[position].cheked = flag
+                this.notifyDataSetChanged()
             }
             // 削除画像押下処理を追加
             viewHolder.img.setOnClickListener { view ->
